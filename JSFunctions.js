@@ -15,13 +15,6 @@ oGameData.initGlobalObject = function() {
 
     //Datastruktur för vilka platser som är lediga respektive har brickor
     oGameData.gameField = Array('', '', '', '', '', '', '', '', '');
-    
-    /* Testdata för att testa rättningslösning */
-    //oGameData.gameField = Array('X', 'X', 'X', '', '', '', '', '', '');
-    //oGameData.gameField = Array('X', '', '', 'X', '', '', 'X', '', '');
-    //oGameData.gameField = Array('X', '', '', '', 'X', '', '', '', 'X');
-    //oGameData.gameField = Array('', '', 'X', '', 'X', '', 'X', '', '');
-    //oGameData.gameField = Array('X', 'O', 'X', '0', 'X', 'O', 'O', 'X', 'O');
 
     //player 1 tecken
     oGameData.playerOne = "X";
@@ -118,7 +111,6 @@ oGameData.checkForDraw = function() {
  * returnerar 1 om spelaren med ett kryss (X) är vinnare,
  * returnerar 2 om spelaren med en cirkel (O) är vinnare eller
  * returnerar 3 om det är oavgjort.
- * Funktionen tar inte emot några värden.
  */
 oGameData.checkForGameOver = function() {
 
@@ -139,6 +131,128 @@ oGameData.checkForGameOver = function() {
 
     return 0;
 
+}
+///----------------------------------LABB 2-----------------------
+
+//Väntar på att fönstret laddar in
+window.addEventListener("load", () => {
+    oGameData.initGlobalObject();
+    
+    //Sätter klassen på gameArea till d-none
+    let gameArea = document.getElementById("gameArea");
+    if(gameArea) {
+        gameArea.className = "d-none";
+    }else {
+        console.log("Error: Could not aquire gameArea Object");
+    }
+
+    //Lägger till en lysnare på start knappen som kör validateForm()
+    let startBtn = document.getElementById("newGame");
+    if(startBtn) {
+        startBtn.addEventListener("click", () => {
+            validateForm();
+        });
+    }else {
+        console.log("Error: Could not aquire Start Button Object");
+    }
+});
+
+
+function validateForm() {
+    try {
+        let nick1 = document.getElementById("nick1");
+        let nick2 = document.getElementById("nick2");
+
+        if(nick1.value.length < 5 || nick2.value.length < 5) {
+            throw new Error("Spelarnamnen måste vara minst 5 tecken långa.");
+        }
+
+        if(nick1.value === nick2.value) {
+            throw new Error("Spelarna måste ha olika namn.");
+        }
+
+        let color1 = document.getElementById("color1");
+        let color2 = document.getElementById("color2");
+
+        if(color1.value === "#ffffff" || color2.value === "#ffffff") {
+            throw new Error("Vit färg får inte användas.");
+        }
+
+        if(color1.value === "#000000" || color2.value === "#000000") {
+            throw new Error("Svart färg får inte användas.");
+        }
+
+        if(color1.value === color2.value) {
+            throw new Error("Spelarna måste använda olika färger.");
+        }
+        
+        initiateGame();
+
+    }catch(e) {
+        let msgBox = document.getElementById("errorMsg");
+        msgBox.innerText = e;
+        
+    }
+
+
+}
+
+
+function initiateGame() {
+    //göm formuläret
+    let form = document.getElementById("divInForm").parentElement;
+    if(form) {
+        form.className = "d-none";
+    }
+
+    //visa spelplanen
+    let gameArea = document.getElementById("gameArea");
+    if(gameArea) {
+        gameArea.className = "";
+    }
+
+    //rensa err medelande
+    let msgBox = document.getElementById("errorMsg");
+    if(msgBox) {
+        msgBox.innerText = "";
+    }
+
+    //spara spelarnamnen
+    oGameData.nickNamePlayerOne = document.getElementById("nick1").value;
+    oGameData.nickNamePlayerTwo = document.getElementById("nick2").value;
+
+    //spara spelarfärgerna
+    oGameData.color1 = document.getElementById("color1").value;
+    oGameData.color2 = document.getElementById("color2").value;
+
+    //reseta spelplanen
+    let gameSpaces = document.getElementsByTagName("td");
+    for(let i = 0; i < gameSpaces.length; i++) {
+        gameSpaces[i].textContent = "";
+        gameSpaces[i].style.backgroundColor = "white";
+    }
+
+    let playerChar, playerName;
+    let rand = Math.random();
+
+    //randomize the starting player
+    if(rand < 0.5) {
+        playerChar = oGameData.playerOne;
+        playerName = oGameData.nickNamePlayerOne;
+        oGameData.currentPlayer = oGameData.playerOne;
+    }else {
+        playerChar = oGameData.playerTwo;
+        playerName = oGameData.nickNamePlayerTwo;
+        oGameData.currentPlayer = oGameData.playerTwo;
+    }
+
+    //Set the current player text
+    let currentPlayerTxt = document.getElementsByClassName("jumbotron")[0].getElementsByTagName("h1")[0];
+    if(oGameData.currentPlayer === "X") {
+        currentPlayerTxt.innerText = "Aktuell spelare är " + oGameData.nickNamePlayerOne + '(' + oGameData.currentPlayer + ')';
+    }else if(oGameData.currentPlayer === "O") {
+        currentPlayerTxt.innerText = "Aktuell spelare är " + oGameData.nickNamePlayerTwo + '(' + oGameData.currentPlayer + ')';
+    }
 }
 
 
