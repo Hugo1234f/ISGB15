@@ -222,8 +222,8 @@ function initiateGame() {
     oGameData.nickNamePlayerTwo = document.getElementById("nick2").value;
 
     //spara spelarfärgerna
-    oGameData.color1 = document.getElementById("color1").value;
-    oGameData.color2 = document.getElementById("color2").value;
+    oGameData.colorPlayerOne = document.getElementById("color1").value;
+    oGameData.colorPlayerTwo = document.getElementById("color2").value;
 
     //reseta spelplanen
     let gameSpaces = document.getElementsByTagName("td");
