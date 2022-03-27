@@ -475,6 +475,8 @@ function eggxecuteMove(e) {
       gameArea.className = "d-none";
 
       window.removeEventListener("click", window);
+      let checkBoxAtt = document.getElementById("chkbox");
+      checkBoxAtt.checked = false;
       oGameData.initGlobalObject();
     }
   }
