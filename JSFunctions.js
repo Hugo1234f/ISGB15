@@ -45,6 +45,12 @@ oGameData.initGlobalObject = function () {
 
   // Boolean värde om spelet är igång.
   oGameData.gameRunning = false;
+
+  /* 
+  * ÄNDRAT 2022-04-12
+  Variabel för countdown
+   */
+  oGameData.timerCount = 5;
 };
 
 //Horizontal
@@ -260,7 +266,8 @@ function validateForm() {
   } catch (e) {
     // Sätter felmeddelande till elementet med id errorMsg
     let msgBox = document.getElementById("errorMsg");
-    msgBox.innerText = e;
+    // msgBox.innerText = e;
+    msgBox.textContent = e;
   }
 }
 
@@ -342,24 +349,25 @@ function initiateGame() {
   startTimer();
 }
 
-// Initialiserar två variabler, time och timer
-// Time håller tiden kvar och timer håller timerId
-let time = 5;
-let timer = oGameData.timerId;
+/*
+ * TOG BORT DESSA GLOBALA VARIABLER OCH DEKLARERAR DOM I oGameData istället
+ * Ändrat 2022-04-12
+ */
 function startTimer() {
   // Checkar om timer är true och om spelet körs
   if (oGameData.timerEnabled && oGameData.gameRunning) {
     // Sätter en timer till denna funktion på 1000ms (1 sek)
-    timer = setTimeout(startTimer, 1000);
-    // Time - 1
-    time--;
+    oGameData.timerId = setTimeout(startTimer, 1000);
+    // Visa tiden SEN dra bort ett, anledning varför det visade time left: 4 först
     trackTimeLeft();
-    console.log("Time left: " + time);
+    // Time - 1
+    oGameData.timerCount--;
+    console.log("Time left: " + oGameData.timerCount);
     // Retunerar true om time är 0
-    if (time === 0) {
+    if (oGameData.timerCount === -1) {
       console.log("swapping places...");
       // Resettar tiden till 5
-      time = 5;
+      oGameData.timerCount = 5;
       // Kollar om currentplayer är playerOne
       // Om det är sant, byt plats på currentplayer
       if (oGameData.currentPlayer === oGameData.playerOne) {
@@ -367,14 +375,20 @@ function startTimer() {
         document
           .getElementsByClassName("jumbotron")[0]
           .getElementsByTagName("h1")[0].innerText =
-          oGameData.nickNamePlayerTwo + "(O)" + " Time left: " + time;
+          oGameData.nickNamePlayerTwo +
+          "(O)" +
+          " Time left: " +
+          oGameData.timerCount;
         console.log("curr player : " + oGameData.currentPlayer);
       } else if (oGameData.currentPlayer === oGameData.playerTwo) {
         oGameData.currentPlayer = oGameData.playerOne;
         document
           .getElementsByClassName("jumbotron")[0]
           .getElementsByTagName("h1")[0].innerText =
-          oGameData.nickNamePlayerOne + "(X)" + " Time left: " + time;
+          oGameData.nickNamePlayerOne +
+          "(X)" +
+          " Time left: " +
+          oGameData.timerCount;
         console.log("curr player : " + oGameData.currentPlayer);
       }
     }
@@ -383,14 +397,20 @@ function startTimer() {
 
 // Funktion för att resetta tiden, används vid ett klick event
 function resetTimer() {
-  return (time = 5);
+  return oGameData.timerEnabled
+    ? (oGameData.timerCount = 5)
+    : (oGameData.timerEnabled = false);
+  // ÄNDRADE TILL EN TERNERY OPERATOR, OM TIMEREANBLED ÄR TRUE,
+  // SÄTT COUNT TILL 5
+  // ANNARS OM TINERENABLED E FALSE, SÄTT DEN TILL FALSE DÅ
+  // return (oGameData.timerCount = 5);
 }
 
 // Funktion som uppdaterar spelar namnen med time left
 function trackTimeLeft() {
   let jumbo = document.querySelector(".jumbotron");
   let jumbochild = jumbo.querySelector("h1");
-  let txta = " Time left: " + time;
+  let txta = " Time left: " + oGameData.timerCount;
   let currP = returnCurrPlayer();
 
   console.log("jumbo: " + jumbo);
@@ -451,7 +471,7 @@ function eggxecuteMove(e) {
     // Detta triggas om spelare ett vinner, alternativt spelare två
     // Eller om det blir oavgjort
     if (result === 1 || result === 2 || result === 3) {
-      clearTimeout(timer);
+      clearTimeout(oGameData.timerId);
       let form = document.getElementById("divInForm").parentElement;
       form.className = "";
 
@@ -475,9 +495,16 @@ function eggxecuteMove(e) {
       gameArea.className = "d-none";
 
       window.removeEventListener("click", window);
-      let checkBoxAtt = document.getElementById("chkbox");
-      checkBoxAtt.checked = false;
       oGameData.initGlobalObject();
+      /* 
+        ÄNDRADE 2022-04-12, TIMERENABLED MÅSTE VARA UNDER FUNKTIONEN
+        // INITGLOBALOBJECT ANNARS BLIR DET JU TILL TRUE SEN FALSE ÄNDÅ I
+        // TIMERENABELD VARIABLEN.
+       */
+      let checkBoxAtt = document.getElementById("chkbox");
+      checkBoxAtt.checked = true;
+      oGameData.timerEnabled = true;
+      console.log("Is enabled?" + oGameData.timerEnabled);
     }
   }
 }
@@ -487,6 +514,11 @@ function createTimerButton() {
   // Hittar tag med id divInForm
   // Skapar ett element, input och label
   let parent = document.querySelector("#divInForm");
+  /*
+   * ÄNDRAT 2022-04-12
+   * LÄGGER INPUT OCH LABEL ENKAPSLAT I ETT DIV ELEMENT
+   */
+  let divEle = document.createElement("div");
   let input = document.createElement("input");
   let label = document.createElement("label");
 
@@ -503,11 +535,10 @@ function createTimerButton() {
   let text = document.createTextNode(
     "Vill du begränsa tiden till 5 sekunder per drag?"
   );
-  // Appendar input i parent
-  parent.appendChild(input);
-  // Appendar label i parent
-  parent.appendChild(label);
-  // Sätter texten i vår textnode i label
+
+  parent.appendChild(divEle);
+  divEle.appendChild(input);
+  divEle.appendChild(label);
   label.appendChild(text);
 
   // Lägger en lyssnare på funktionen returnedBoxChecked som triggas på "click"
@@ -522,10 +553,12 @@ function returnBoxChecked() {
   if (isChecked.checked) {
     // Sätt timerEnabled till sant
     oGameData.timerEnabled = true;
+    console.log("Timer status: " + oGameData.timerEnabled);
     return true;
   } else {
     // Sätt timerEnabled till false
     oGameData.timerEnabled = false;
+    console.log("Timer status: " + oGameData.timerEnabled);
     return false;
   }
 }
